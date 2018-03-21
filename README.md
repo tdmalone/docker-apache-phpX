@@ -46,6 +46,7 @@ When you've finished, you can clean up by running:
 
 ## TODO
 
+* Build everything at Docker Hub
 * Make files writable by the web server
 * Increase the PHP upload limit to something much larger than the default
 * Make error logs available somewhere easy

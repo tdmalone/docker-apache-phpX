@@ -1,0 +1,52 @@
+language: generic
+services: docker
+
+install: true
+
+script:
+
+  - FAIL=false
+
+  # Lint all Dockerfiles.
+  - DOCKERFILES=$(git ls-tree -r HEAD | grep -E '^.*\Dockerfile$' | awk '{print $4}')
+  - docker pull hadolint/hadolint
+  - for Dockerfile in $DOCKERFILES; do
+      echo && echo $Dockerfile && echo;
+      docker run --rm -i hadolint/hadolint < $Dockerfile || FAIL=true;
+      echo;
+    done
+
+  # Lint all shell scripts (excluding external source checks).
+  - SCRIPTS=$(git ls-tree -r HEAD | grep -E '^.*\.*\.sh' | awk '{print $4}')
+  - for script in $SCRIPTS; do
+      echo && echo $script && echo;
+      shellcheck --exclude=SC1091 $script || FAIL=true;
+      echo;
+    done
+
+  # Build all Dockerfiles.
+  # TODO: Consider whether this should only happen on certain branches, or only for Dockerfiles in changed folders?
+  - for Dockerfile in $DOCKERFILES; do
+      echo && echo $Dockerfile && echo;
+      dirname=$( dirname $Dockerfile );
+      docker build --tag "php-docker-${dirname}" "${dirname}/" || FAIL=true;
+      echo;
+    done
+
+  # Did any of our key commands fail?
+  - if [ "${FAIL}" = "true" ]; then
+      travis_terminate 1;
+    fi
+
+#deploy:
+
+  # TODO: Push Dockerfiles to Docker Hub.
+
+notifications:
+  email: false
+  webhooks:
+    urls: https://api.tm.id.au/v2/travis/jobStatus
+  slack:
+    on_start: always
+    rooms:
+      - secure: JvQm8ov586/O/neqkcjXoxuI0dWXM4ymuTSaT8OCfXLkC43cS7QryYJxJ5Onc6Wet4v8x7GremjCWgQbFssu7no8fPF2BpKP00K1f5XLvLoiUjv/wVW80GQ5SNsnxH8YQLS2ZyyU2BOaktsqWXaXwHsFFZuG/JoFbbrPn1Dms4M5+i18nRL3pMlz/iRohilmvp01C0lg25Fl6R46ZtlrI4g26ond74U3aEKTuK7n8SGzx40GaLeGxtzfqB6xWbLLzr6yQOLrtnnQkTU6omw00IUlka8AhHnK0/GdCyFdSyzxx/74XLY/eUFesdBRobTE2UUjEhXgNWzXoKDf9zrGMw9m29mMb9RPepNVjD6o5ibILksLclpH8DvD/yYRwDQZLyU1Yd9Dw8BbyjkuPpXqiAoabNfNiZBGvpT/MFofPzOQBDacG2pyymIPPfNG821Nj7K92QmaG0H5W4HxkdNYd/om5Uq89mMK4G5QGRX3gWZQIsfr2P96n71eYMWxrd28o7WirIK3YTImmQTD6xX6mOjWT1rISIEHXcjw3p5qRxkEmWZJMajbRy4tpxkSK/W+j5po+aL4mxW+1AjR9XgZQyksSfU9XfT/Ev9VZiJak2bpvs+wLh08Nkd+g7dZ0kuy+Ulk2y7ZsLd3ZdC5szChcpNE8HoMAU1PhQXpJ2G447c=
