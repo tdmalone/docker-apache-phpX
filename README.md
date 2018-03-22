@@ -22,11 +22,25 @@ Because sometimes, you have to work with old software, and it's not immediately 
 
 I put these together primarily as a tool to help me at work, where we're frequently upgrading old versions of WordPress and plugins that won't (yet) work on newer versions of PHP.
 
-## Usage
+## Quick Start
 
-Currently you need to build these images yourself, but Docker Hub builds are coming shortly.
+For PHP 5.3, for instance:
 
-Here's an easy way to build and start a PHP 5.3 container, for example:
+    $ PHP_VERSION=5.3
+    $ WEB_ROOT=/path/to/your/web/root
+    $ HOST_PORT=8080
+
+    $ docker run --rm --detach --publish ${HOST_PORT}:80 --volume ${WEB_ROOT}:/var/www --name php${PHP_VERSION} tdmalone/docker-apache-phpx:${PHP_VERSION}
+
+This will download the pre-built image for PHP 5.3, and start a container named `php5.3` on http://localhost:8080 (loading from the web root you supplied).
+
+When you've finished, you can clean up (and automatically remove the container) by running:
+
+    $ docker stop php${PHP_VERSION}
+
+## Building
+
+To build the PHP 5.3 image yourself:
 
     $ PHP_VERSION=5.3
     $ WEB_ROOT=/path/to/your/web/root
@@ -36,21 +50,7 @@ Here's an easy way to build and start a PHP 5.3 container, for example:
     $ docker build --tag php${PHP_VERSION} docker-apache-phpX/php${PHP_VERSION}
     $ docker run --rm --detach --publish ${HOST_PORT}:80 --volume ${WEB_ROOT}:/var/www --name php${PHP_VERSION} php${PHP_VERSION}
 
-This example will start a PHP 5.3 container named `php5.3`, on http://localhost:8080, starting from your web root.
-
 If you set your web root to the folder that docker-apache-phpX was cloned into (eg. by running `WEB_ROOT=$PWD`), then you can visit http://localhost:8080/docker-apache-phpX/phpinfo.php to prove that you're running the PHP version you chose.
-
-When you've finished, you can clean up by running:
-
-    $ docker stop php${PHP_VERSION}
-
-## TODO
-
-* Build everything at Docker Hub
-* Make files writable by the web server
-* Increase the PHP upload limit to something much larger than the default
-* Make error logs available somewhere easy
-* Further documentation
 
 ## Development
 
@@ -69,6 +69,15 @@ To debug an image, swap `--detach` with `--interactive --tty` and add `bash` to 
     $ docker run --rm --interactive --tty --publish ${HOST_PORT}:80 --volume ${WEB_ROOT}:/var/www --name php${PHP_VERSION} php${PHP_VERSION} bash
 
 Then run `run` to simulate what would have happened if you started the container detached.
+
+This repository is linked to an automated build at Docker Hub, with each subdirectory manually mapped to a version tag.
+
+## TODO
+
+* Make files writable by the web server
+* Increase the PHP upload limit to something much larger than the default
+* Make error logs available somewhere easy
+* Further documentation (eg. see [Alexander's repo](https://github.com/bylexus/docker-apache-php53) for more of the features he included, such as logging and setting error reporting level via an environment variable)
 
 ## License
 
